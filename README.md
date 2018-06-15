@@ -1,14 +1,10 @@
-# Running Kafka on Kubernetes
+# Running Kafka on Kubernetes Basic
 
 Based on these existing repos:
 
 [https://github.com/kubernetes/charts/tree/master/incubator/kafka](https://github.com/kubernetes/charts/tree/master/incubator/kafka)
 
 [https://github.com/Yolean/kubernetes-kafka](https://github.com/Yolean/kubernetes-kafka)
-
-## Prerequites
-- [Kubernetes Cluster](https://kubernetes.io/docs/setup/)
-- [Helm](https://helm.sh/)
 
 ## Setup
 
@@ -47,3 +43,64 @@ To start an interactive message producer session:
 `kubectl -n default exec -ti testclient -- ./bin/kafka-console-producer.sh --broker-list my-kafka-headless:9092 --topic test1`
 
 To create a message in the above session, simply type the message and press `enter`.
+
+# Running Kafka on Kubernetes [Yolean/kubernetes-kafka]
+
+** Check the Yolean/kubernetes-kafka for most up to date manifest and docs **
+
+## Setup
+
+Clone repo: [https://github.com/Yolean/kubernetes-kafka](https://github.com/Yolean/kubernetes-kafka)
+
+`cd kubernetes-kafka`
+
+For the storage, this is based on your choice of provider. Yolean provides the following manifests to choose from:
+
+- AKS
+- AWS
+- Docker
+- GKE
+- MiniKube
+
+`kubectl apply -f ./configure/PROVIDER-storageclass-broker ... .yml`
+
+`kubectl apply -f ./configure/PROVIDER-storageclass-zookeeper ... .yml`
+
+`kubectl create -f 00-namespace.yml`
+
+`kubectl apply -f ./rbac-namespace-default`
+
+`kubectl apply -f ./zookeeper`
+
+`kubectl apply -f ./kafka`
+
+## Access Kafka Manager
+
+`kubectl apply -f ./yahoo-kafka-manager`
+
+`kubectl proxy &`
+
+Kafka Manager:
+http://localhost:8001/api/v1/proxy/namespaces/kafka/services/kafka-manager:80/
+
+You have to configure a new cluster and connect zookeeper:
+
+`Cluster -> Add Cluster -> Cluster Zookeeper Hosts = zookeeper.kafka:2181 -> Version 0.11.0.0`
+
+Learn more here: [https://github.com/yahoo/kafka-manager](https://github.com/yahoo/kafka-manager)
+
+## Producer and Consumer
+
+### Deploying within the cluster
+
+The host/broker will be the bootstrap service's Cluster IP (or 'service-name.namespace') and the port number; based on the previous setup steps, it will most likely look this: `bootstrap.kafka:9092`
+
+### Accessing Kafka from outside the cluster
+
+//TODO
+
+## Delete Everything
+
+If you want to remove all the resources created:
+
+`kubectl delete ns kafka`
